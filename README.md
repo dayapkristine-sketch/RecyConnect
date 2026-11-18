@@ -274,8 +274,14 @@ Commands:
 flutter pub get
 flutter analyze
 flutter run
+flutter build apk --release
 flutter build web --release
 ```
+
+The Android release artifact is available as
+`build/app/outputs/flutter-apk/RecyConnect.apk` after renaming the standard
+Flutter output. The installed Android application display name is configured
+as `RecyConnect`.
 
 Firebase setup:
 
