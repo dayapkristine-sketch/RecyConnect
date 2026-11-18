@@ -18,6 +18,7 @@ Implemented backend services:
 
 - Firebase Authentication with email/password login.
 - Email verification and password reset.
+- Optional device biometric verification after Firebase login for approved users.
 - Cloud Firestore persistence for accounts, posts, offers, messages,
   notifications, favorites, and reports.
 - Firestore security rules for authenticated and role-based access.
@@ -231,6 +232,9 @@ continued Storage access, even though a no-cost usage quota may still apply.
 - Provider access to exact pickup details is restricted by the collection flow.
 - Household identity can be displayed anonymously before offer acceptance.
 - Failed-login tracking and temporary lock handling are supported in the app.
+- Device biometrics use the operating system prompt and never store fingerprint
+  images, biometric templates, or passwords. Users can continue with their
+  Firebase password when biometrics are unavailable or not enrolled.
 - Logout signs out from Firebase and clears the current app state.
 - Firebase local development files and environment overrides are excluded by
   [.gitignore](.gitignore).
@@ -282,6 +286,30 @@ Firebase setup:
 5. Create the matching document at `users/{adminAuthUid}`.
 6. Set `role` to `admin` and `status` to `approved`.
 7. Verify the administrator email before signing in.
+
+## Biometric authentication
+
+After a successful Firebase login, approved household, collector, junk-shop,
+and administrator users are shown a device biometric prompt. The app uses the
+`local_auth` package and requests verification through the operating system;
+the app never receives or stores the user's fingerprint or face data.
+
+On Android, the device must have a secure screen lock and at least one enrolled
+fingerprint or other supported biometric. If biometrics are unavailable,
+unenrolled, cancelled, or temporarily locked, the user can select **Continue
+with password login**. Firebase email/password authentication remains the
+account-level authentication method and is not replaced by local biometrics.
+
+To test biometric authentication on Android:
+
+1. Enroll a fingerprint in the device's security settings, or configure an
+   enrolled biometric in a supported Android emulator.
+2. Build and install the release APK with `flutter build apk --release`.
+3. Sign in with an approved, email-verified account.
+4. Complete the biometric prompt, or choose the password fallback.
+5. Sign out and repeat the test with another approved role.
+
+The admin activity log also remains protected by the biometric session check.
 
 ## GitHub teamwork
 
