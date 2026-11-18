@@ -283,6 +283,42 @@ The Android release artifact is available as
 Flutter output. The installed Android application display name is configured
 as `RecyConnect`.
 
+## Release APK and installation
+
+The current Android release is published on GitHub:
+
+- [RecyConnect v1.0.0 release](https://github.com/dayapkristine-sketch/RecyConnect/releases/tag/v1.0.0)
+
+To install a newer local release on a connected Android phone or emulator:
+
+```powershell
+flutter clean
+flutter pub get
+flutter analyze
+flutter test
+flutter build apk --release
+Copy-Item build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/RecyConnect.apk -Force
+adb install -r build/app/outputs/flutter-apk/RecyConnect.apk
+```
+
+The phone may ask you to allow installation from the browser or file manager.
+Only install APKs downloaded from a trusted project source. The APK connects
+to the configured Firebase project when the device has internet access.
+
+Before sharing a release with testers, verify:
+
+1. A new user can register and receive an email verification message.
+2. An administrator can approve the account and the approved user can sign in.
+3. Household, collector, junk-shop, and administrator role restrictions work.
+4. Posts, offers, messages, notifications, reports, and profile changes appear
+   in Firestore after synchronization.
+5. Logout clears the session, and biometric verification offers password
+   fallback when biometrics are unavailable or cancelled.
+6. The app behaves safely with Wi-Fi disabled and then reconnects.
+
+Do not use real passwords, identity documents, or private personal data for a
+classroom demonstration. Create test accounts and remove test data afterward.
+
 Firebase setup:
 
 1. Enable Email/Password Authentication.
