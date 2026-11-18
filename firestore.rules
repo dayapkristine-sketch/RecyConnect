@@ -1,0 +1,95 @@
+rules_version = '2';
+
+// RecyConnect Firestore access rules.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create: if isOwner(uid) && request.resource.data.role != 'admin';
+      // Role, approval status, and verification flags must be server/admin controlled.
+      allow update: if isAdmin() ||
+        (isOwner(uid) &&
+         request.resource.data.role == resource.data.role &&
+         request.resource.data.status == resource.data.status &&
+         request.resource.data.emailVerified == resource.data.emailVerified);
+      allow delete: if isAdmin();
+    }
+
+    match /posts/{postId} {
+      allow read: if signedIn() &&
+        (resource.data.status == 'posted' ||
+         resource.data.householdUid == request.auth.uid ||
+         resource.data.acceptedProviderUid == request.auth.uid ||
+         isAdmin());
+      allow create: if signedIn() && request.resource.data.householdUid == request.auth.uid;
+      allow update: if isAdmin() ||
+        (signedIn() &&
+         (resource.data.householdUid == request.auth.uid ||
+          resource.data.acceptedProviderUid == request.auth.uid));
+      allow delete: if isAdmin() ||
+        (signedIn() && resource.data.householdUid == request.auth.uid);
+    }
+
+    match /posts/{postId}/offers/{offerId} {
+      allow read: if signedIn() &&
+        (get(/databases/$(database)/documents/posts/$(postId)).data.householdUid == request.auth.uid ||
+         resource.data.providerUid == request.auth.uid || isAdmin());
+      allow create: if signedIn() && request.resource.data.providerUid == request.auth.uid;
+      allow update: if isAdmin() ||
+        (signedIn() && get(/databases/$(database)/documents/posts/$(postId)).data.householdUid == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+
+    match /conversations/{conversationId}/messages/{messageId} {
+      allow read: if isAdmin() ||
+        (signedIn() &&
+         (resource.data.fromUid == request.auth.uid ||
+          resource.data.toUid == request.auth.uid));
+      allow create: if signedIn() &&
+        request.resource.data.fromUid == request.auth.uid &&
+        request.resource.data.toUid is string;
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if signedIn() && resource.data.toUid == request.auth.uid;
+      allow update: if signedIn() && resource.data.toUid == request.auth.uid;
+      allow create: if signedIn() &&
+        request.resource.data.fromUid == request.auth.uid &&
+        request.resource.data.toUid is string;
+      allow delete: if isAdmin();
+    }
+
+    match /favorites/{favoriteId} {
+      allow read, create, update, delete: if signedIn() &&
+        (resource.data.ownerUid == request.auth.uid ||
+         request.resource.data.ownerUid == request.auth.uid || isAdmin());
+    }
+
+    match /reports/{reportId} {
+      allow create: if signedIn() && request.resource.data.reporterUid == request.auth.uid;
+      allow read: if isAdmin() ||
+        (signedIn() && resource.data.reporterUid == request.auth.uid);
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
