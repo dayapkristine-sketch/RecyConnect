@@ -7,6 +7,7 @@ import '../../providers/post_store.dart';
 import '../../widgets/app_background.dart';
 import 'register_page.dart';
 import 'verify_email_page.dart';
+import 'biometric_verification_page.dart';
 import '../admin/admin_dashboard.dart';
 import '../dashboards/role_dashboard.dart';
 import '../dashboards/household_dashboard.dart';
@@ -48,6 +49,10 @@ class _LoginPageState extends State<LoginPage> {
     }
     final user = app.currentUser!;
     await context.read<PostStore>().loadForCurrentUser();
+    if (!mounted) return;
+    await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => const BiometricVerificationPage()),
+    );
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../models/activity_log.dart';
 import '../../providers/app_provider.dart';
+import '../../services/biometric_service.dart';
 import 'admin_widgets.dart';
 
 class AdminActivityTab extends StatefulWidget {
@@ -21,9 +22,39 @@ class _AdminActivityTabState extends State<AdminActivityTab> {
     'Logins',
   ];
   String _group = 'All';
+  bool _isUnlocked = BiometricService.sessionChecked;
+  bool _isAuthenticating = false;
+
+  Future<void> _unlockActivityLog() async {
+    if (_isAuthenticating) return;
+    setState(() => _isAuthenticating = true);
+    final result = await BiometricService.authenticate();
+    if (!mounted) return;
+    setState(() {
+      _isAuthenticating = false;
+      _isUnlocked = result == BiometricResult.success;
+    });
+    if (result == BiometricResult.success) return;
+
+    final message = switch (result) {
+      BiometricResult.unavailable =>
+        'Biometric authentication is not available on this device.',
+      BiometricResult.notEnrolled =>
+        'Enroll a fingerprint or other biometric in device settings first.',
+      BiometricResult.lockedOut =>
+        'Biometrics are temporarily locked. Unlock your device and try again.',
+      BiometricResult.cancelled => 'Biometric authentication was cancelled.',
+      BiometricResult.failed => 'Biometric authentication failed. Try again.',
+      BiometricResult.success => '',
+    };
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (!_isUnlocked) return _buildLockedView(context);
+
     final app = context.watch<AppProvider>();
     final logs = app.logs
         .where((l) => _group == 'All' || l.type.group == _group)
@@ -87,6 +118,48 @@ class _AdminActivityTabState extends State<AdminActivityTab> {
                     ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLockedView(BuildContext context) {
+    return SafeArea(
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.fingerprint,
+                size: 86,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Admin activity log locked',
+                style: Theme.of(context).textTheme.headlineSmall
+                    ?.copyWith(fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Use your enrolled fingerprint or other device biometric to continue.',
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              FilledButton.icon(
+                onPressed: _isAuthenticating ? null : _unlockActivityLog,
+                icon: const Icon(Icons.fingerprint),
+                label: Text(
+                  _isAuthenticating
+                      ? 'Authenticating...'
+                      : 'Unlock activity log',
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

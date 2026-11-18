@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/app_provider.dart';
+import '../../services/biometric_service.dart';
 import '../../services/firebase_service.dart';
 import 'loading_page.dart';
 import 'login_page.dart';
@@ -21,6 +22,7 @@ class _LogoutLoadingPageState extends State<LogoutLoadingPage> {
   }
 
   Future<void> _signOut() async {
+    BiometricService.resetSession();
     final minimumLoadingTime = Future<void>.delayed(const Duration(seconds: 2));
     await FirebaseService.signOut();
     await minimumLoadingTime;
