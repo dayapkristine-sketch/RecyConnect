@@ -21,7 +21,9 @@ class _LogoutLoadingPageState extends State<LogoutLoadingPage> {
   }
 
   Future<void> _signOut() async {
+    final minimumLoadingTime = Future<void>.delayed(const Duration(seconds: 2));
     await FirebaseService.signOut();
+    await minimumLoadingTime;
     if (!mounted) return;
     context.read<AppProvider>().logout();
     Navigator.of(context).pushAndRemoveUntil(

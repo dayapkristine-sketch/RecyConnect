@@ -32,12 +32,16 @@ class _StartupAppState extends State<StartupApp> {
   }
 
   Future<void> _initialize() async {
+    // Keep the branded startup screen visible briefly without delaying any
+    // Firebase work beyond what is necessary.
+    final minimumLoadingTime = Future<void>.delayed(const Duration(seconds: 2));
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
     await initializeOfflineMapCache();
     final appProvider = AppProvider();
     await appProvider.loadTheme();
+    await minimumLoadingTime;
     if (mounted) setState(() => _appProvider = appProvider);
   }
 
