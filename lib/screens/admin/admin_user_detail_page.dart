@@ -139,7 +139,7 @@ class AdminUserDetailPage extends StatelessWidget {
                 message: '${user.fullName} will become a ${v.label}.',
                 confirmLabel: 'Change',
               );
-              if (ok) app.changeRole(user, v);
+              if (ok) await app.changeRole(user, v);
             },
           ),
 
@@ -177,7 +177,7 @@ class AdminUserDetailPage extends StatelessWidget {
                 danger: true,
               );
               if (!ok) return;
-              app.deleteUser(user);
+              await app.deleteUser(user);
               if (context.mounted) Navigator.pop(context);
             },
             icon: const Icon(Icons.delete_outline),
@@ -212,7 +212,7 @@ class AdminUserDetailPage extends StatelessWidget {
         builder: (_) => const _ReasonDialog(),
       );
       if (reason == null) return;
-      app.reject(user, reason: reason);
+      await app.reject(user, reason: reason);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('${user.fullName} was rejected.')),
@@ -220,11 +220,13 @@ class AdminUserDetailPage extends StatelessWidget {
       }
     }
 
-    void doApprove() {
-      app.approve(user);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('${user.fullName} was approved.')));
+    Future<void> doApprove() async {
+      await app.approve(user);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${user.fullName} was approved.')),
+        );
+      }
     }
 
     switch (user.status) {
@@ -258,7 +260,7 @@ class AdminUserDetailPage extends StatelessWidget {
               confirmLabel: 'Suspend',
               danger: true,
             );
-            if (ok) app.suspend(user);
+            if (ok) await app.suspend(user);
           },
           icon: const Icon(Icons.block),
           label: const Text('Suspend account'),

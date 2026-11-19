@@ -64,6 +64,14 @@ class _LoginPageState extends State<LoginPage> {
       );
       return;
     }
+    if (user.role == UserRole.admin) {
+      final loadError = await app.loadUsersFromFirebase();
+      if (!mounted) return;
+      if (loadError != null) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(loadError)));
+      }
+    }
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (_) {

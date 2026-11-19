@@ -106,6 +106,8 @@ class AppUser {
     this.profilePhoto,
     this.status = AccountStatus.pending,
     this.rejectionReason,
+    this.firebaseUid,
+    this.documentsSubmitted = false,
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now(),
        lastActive = DateTime.now();
@@ -125,6 +127,8 @@ class AppUser {
   final DateTime createdAt;
   AccountStatus status;
   String? rejectionReason;
+  final String? firebaseUid;
+  bool documentsSubmitted;
   int failedLoginAttempts = 0;
   DateTime? lockedUntil;
   DateTime lastActive;
@@ -134,7 +138,8 @@ class AppUser {
   bool get isInactive => DateTime.now().difference(lastActive).inDays >= 30;
   bool get requiresPermit => role == UserRole.junkShop;
   bool get hasRequiredDocuments =>
-      idDocument != null &&
-      idBackDocument != null &&
-      (!requiresPermit || permitDocument != null);
+      documentsSubmitted ||
+      (idDocument != null &&
+          idBackDocument != null &&
+          (!requiresPermit || permitDocument != null));
 }

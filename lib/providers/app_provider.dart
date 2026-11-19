@@ -106,6 +106,7 @@ class AppProvider extends ChangeNotifier {
         idDocument: idDocument,
         idBackDocument: idBackDocument,
         permitDocument: role == UserRole.junkShop ? permitDocument : null,
+        documentsSubmitted: true,
         status: AccountStatus.pending,
       ),
     );
@@ -249,6 +250,19 @@ class AppProvider extends ChangeNotifier {
     }
   }
 
+  Future<String?> loadUsersFromFirebase() async {
+    try {
+      final loaded = await FirebaseService.loadUsersForAdmin();
+      users
+        ..clear()
+        ..addAll(loaded);
+      notifyListeners();
+      return null;
+    } catch (error) {
+      return 'Could not load users from Firebase: $error';
+    }
+  }
+
   Future<String?> loginWithFirebase(String identity, String password) async {
     emailVerificationRequired = false;
     try {
@@ -325,34 +339,48 @@ class AppProvider extends ChangeNotifier {
 
   // ---------------- Admin actions ----------------
 
-  void approve(AppUser user) {
+  Future<void> approve(AppUser user) async {
+    await _saveAdminFields(
+      user,
+      status: AccountStatus.approved,
+      rejectionReason: null,
+    );
     user.status = AccountStatus.approved;
     user.rejectionReason = null;
     _log(LogType.approval, 'Approved ${user.fullName} (${user.role.label})');
     notifyListeners();
   }
 
-  void reject(AppUser user, {String reason = ''}) {
+  Future<void> reject(AppUser user, {String reason = ''}) async {
+    final cleanReason = reason.isEmpty ? null : reason;
+    await _saveAdminFields(
+      user,
+      status: AccountStatus.rejected,
+      rejectionReason: cleanReason,
+    );
     user.status = AccountStatus.rejected;
-    user.rejectionReason = reason.isEmpty ? null : reason;
+    user.rejectionReason = cleanReason;
     _log(LogType.rejection, 'Rejected ${user.fullName} (${user.role.label})');
     notifyListeners();
   }
 
-  void suspend(AppUser user) {
+  Future<void> suspend(AppUser user) async {
+    await _saveAdminFields(user, status: AccountStatus.suspended);
     user.status = AccountStatus.suspended;
     _log(LogType.suspension, 'Suspended ${user.fullName}');
     notifyListeners();
   }
 
-  void reactivate(AppUser user) {
+  Future<void> reactivate(AppUser user) async {
+    await _saveAdminFields(user, status: AccountStatus.approved);
     user.status = AccountStatus.approved;
     _log(LogType.reactivation, 'Reactivated ${user.fullName}');
     notifyListeners();
   }
 
-  void changeRole(AppUser user, UserRole role) {
+  Future<void> changeRole(AppUser user, UserRole role) async {
     if (user.role == role) return;
+    await _saveAdminFields(user, role: role);
     final old = user.role.label;
     user.role = role;
     _log(
@@ -362,12 +390,31 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void deleteUser(AppUser user) {
+  Future<void> deleteUser(AppUser user) async {
+    if (user.firebaseUid != null) {
+      await FirebaseService.deleteUserProfile(user.firebaseUid!);
+    }
     users.remove(user);
     ratings.removeWhere((r) => r.from == user || r.to == user);
     reports.removeWhere((r) => r.reporter == user || r.reported == user);
     _log(LogType.deletion, 'Deleted account of ${user.fullName}');
     notifyListeners();
+  }
+
+  Future<void> _saveAdminFields(
+    AppUser user, {
+    AccountStatus? status,
+    String? rejectionReason,
+    UserRole? role,
+  }) async {
+    final uid = user.firebaseUid;
+    if (uid == null) return;
+    await FirebaseService.updateUserAdminFields(
+      uid: uid,
+      status: status,
+      rejectionReason: rejectionReason,
+      role: role,
+    );
   }
 
   void addCategory(String value) {

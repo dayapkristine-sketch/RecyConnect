@@ -44,6 +44,10 @@ class FirebaseService {
       'createdAt': FieldValue.serverTimestamp(),
       'lastActive': FieldValue.serverTimestamp(),
       'failedLoginAttempts': 0,
+      'documentsSubmitted': true,
+      'idDocumentName': user.idDocument?.name,
+      'idBackDocumentName': user.idBackDocument?.name,
+      'permitDocumentName': user.permitDocument?.name,
     };
 
     await db.collection('users').doc(firebaseUser.uid).set(profile);
@@ -155,4 +159,56 @@ class FirebaseService {
     };
     await db.collection('users').doc(uid).set(values, SetOptions(merge: true));
   }
+
+  static Future<List<AppUser>> loadUsersForAdmin() async {
+    final snapshot = await db.collection('users').get();
+    return snapshot.docs.map((doc) {
+      final data = doc.data();
+      return AppUser(
+        firebaseUid: doc.id,
+        fullName: (data['fullName'] as String?) ?? 'RecyConnect user',
+        username: (data['username'] as String?) ?? doc.id,
+        password: '',
+        email: (data['email'] as String?) ?? '',
+        role: UserRole.values.firstWhere(
+          (value) => value.name == data['role'],
+          orElse: () => UserRole.household,
+        ),
+        idType: IdType.values.firstWhere(
+          (value) => value.name == data['idType'],
+          orElse: () => IdType.other,
+        ),
+        phone: (data['phone'] as String?) ?? '',
+        address: (data['address'] as String?) ?? '',
+        status: AccountStatus.values.firstWhere(
+          (value) => value.name == data['status'],
+          orElse: () => AccountStatus.pending,
+        ),
+        rejectionReason: data['rejectionReason'] as String?,
+        documentsSubmitted: data['documentsSubmitted'] == true,
+        createdAt: _timestampDate(data['createdAt']),
+      );
+    }).toList();
+  }
+
+  static Future<void> updateUserAdminFields({
+    required String uid,
+    AccountStatus? status,
+    String? rejectionReason,
+    UserRole? role,
+  }) async {
+    await db.collection('users').doc(uid).set({
+      'status': ?status?.name,
+      'rejectionReason': ?rejectionReason,
+      'role': ?role?.name,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  static Future<void> deleteUserProfile(String uid) {
+    return db.collection('users').doc(uid).delete();
+  }
+
+  static DateTime? _timestampDate(dynamic value) =>
+      value is Timestamp ? value.toDate() : null;
 }
