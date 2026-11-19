@@ -185,7 +185,13 @@ class FirebaseService {
           orElse: () => AccountStatus.pending,
         ),
         rejectionReason: data['rejectionReason'] as String?,
-        documentsSubmitted: data['documentsSubmitted'] == true,
+        // Older registrations required documents in the app but did not save
+        // a metadata flag. Keep those existing pending/approved profiles
+        // actionable after migrating the admin list to Firestore.
+        documentsSubmitted:
+            data['documentsSubmitted'] == true ||
+            data['status'] == AccountStatus.pending.name ||
+            data['status'] == AccountStatus.approved.name,
         createdAt: _timestampDate(data['createdAt']),
       );
     }).toList();
@@ -197,12 +203,15 @@ class FirebaseService {
     String? rejectionReason,
     UserRole? role,
   }) async {
-    await db.collection('users').doc(uid).set({
-      'status': ?status?.name,
-      'rejectionReason': ?rejectionReason,
-      'role': ?role?.name,
+    final values = <String, dynamic>{
       'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+      if (status != null) ...{
+        'status': status.name,
+        'rejectionReason': rejectionReason,
+      },
+      if (role != null) 'role': role.name,
+    };
+    await db.collection('users').doc(uid).set(values, SetOptions(merge: true));
   }
 
   static Future<void> deleteUserProfile(String uid) {

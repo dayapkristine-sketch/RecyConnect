@@ -310,7 +310,7 @@ as `RecyConnect`.
 
 The current Android release is published on GitHub:
 
-- [RecyConnect v1.0.2 release](https://github.com/dayapkristine-sketch/RecyConnect/releases/tag/v1.0.2)
+- [RecyConnect v1.0.3 release](https://github.com/dayapkristine-sketch/RecyConnect/releases/tag/v1.0.3)
 
 To install a newer local release on a connected Android phone or emulator:
 
