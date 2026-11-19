@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 import '../models/user_model.dart';
 
@@ -10,6 +11,7 @@ class FirebaseService {
 
   static final FirebaseAuth auth = FirebaseAuth.instance;
   static final FirebaseFirestore db = FirebaseFirestore.instance;
+  static final FirebaseStorage storage = FirebaseStorage.instance;
 
   static String _role(UserRole value) => value.name;
   static String _idType(IdType value) => value.name;
@@ -30,6 +32,26 @@ class FirebaseService {
     await firebaseUser.updateDisplayName(user.fullName);
     await firebaseUser.sendEmailVerification();
 
+    final documentData = <String, dynamic>{};
+    await _uploadDocument(
+      uid: firebaseUser.uid,
+      document: user.idDocument,
+      key: 'idFront',
+      output: documentData,
+    );
+    await _uploadDocument(
+      uid: firebaseUser.uid,
+      document: user.idBackDocument,
+      key: 'idBack',
+      output: documentData,
+    );
+    await _uploadDocument(
+      uid: firebaseUser.uid,
+      document: user.permitDocument,
+      key: 'permit',
+      output: documentData,
+    );
+
     final profile = <String, dynamic>{
       'uid': firebaseUser.uid,
       'fullName': user.fullName,
@@ -48,6 +70,7 @@ class FirebaseService {
       'idDocumentName': user.idDocument?.name,
       'idBackDocumentName': user.idBackDocument?.name,
       'permitDocumentName': user.permitDocument?.name,
+      ...documentData,
     };
 
     await db.collection('users').doc(firebaseUser.uid).set(profile);
@@ -192,6 +215,9 @@ class FirebaseService {
             data['documentsSubmitted'] == true ||
             data['status'] == AccountStatus.pending.name ||
             data['status'] == AccountStatus.approved.name,
+        idDocument: _uploadedDocFromData(data, 'idFront'),
+        idBackDocument: _uploadedDocFromData(data, 'idBack'),
+        permitDocument: _uploadedDocFromData(data, 'permit'),
         createdAt: _timestampDate(data['createdAt']),
       );
     }).toList();
@@ -220,4 +246,50 @@ class FirebaseService {
 
   static DateTime? _timestampDate(dynamic value) =>
       value is Timestamp ? value.toDate() : null;
+
+  static Future<void> _uploadDocument({
+    required String uid,
+    required UploadedDoc? document,
+    required String key,
+    required Map<String, dynamic> output,
+  }) async {
+    if (document == null) return;
+    final extension = document.extension.isEmpty ? 'bin' : document.extension;
+    final path =
+        'users/$uid/verification/${key}_${DateTime.now().microsecondsSinceEpoch}.$extension';
+    final ref = storage.ref(path);
+    await ref.putData(
+      document.bytes,
+      SettableMetadata(contentType: _contentType(document.extension)),
+    );
+    output['${key}DocumentName'] = document.name;
+    output['${key}DocumentPath'] = path;
+    output['${key}DocumentUrl'] = await ref.getDownloadURL();
+    output['${key}DocumentSize'] = document.bytes.length;
+  }
+
+  static String _contentType(String extension) => switch (extension) {
+    'jpg' || 'jpeg' => 'image/jpeg',
+    'png' => 'image/png',
+    'pdf' => 'application/pdf',
+    'doc' => 'application/msword',
+    'docx' =>
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    _ => 'application/octet-stream',
+  };
+
+  static UploadedDoc? _uploadedDocFromData(
+    Map<String, dynamic> data,
+    String key,
+  ) {
+    final name = data['${key}DocumentName'] as String?;
+    final url = data['${key}DocumentUrl'] as String?;
+    if (name == null || url == null) return null;
+    return UploadedDoc(
+      name: name,
+      bytes: Uint8List(0),
+      remoteUrl: url,
+      sizeBytes: (data['${key}DocumentSize'] as num?)?.toInt(),
+    );
+  }
 }

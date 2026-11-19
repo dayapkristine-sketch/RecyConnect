@@ -183,12 +183,19 @@ class DocumentTile extends StatelessWidget {
                   width: 64,
                   height: 64,
                   child: doc.isImage
-                      ? Image.memory(
-                          doc.bytes,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) =>
-                              const Icon(Icons.broken_image_outlined),
-                        )
+                      ? doc.remoteUrl != null
+                            ? Image.network(
+                                doc.remoteUrl!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, _, _) =>
+                                    const Icon(Icons.broken_image_outlined),
+                              )
+                            : Image.memory(
+                                doc.bytes,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, _, _) =>
+                                    const Icon(Icons.broken_image_outlined),
+                              )
                       : Container(
                           color: AdminColors.mint,
                           child: Icon(
@@ -257,13 +264,21 @@ class DocumentViewerPage extends StatelessWidget {
               minScale: 0.5,
               maxScale: 6,
               child: Center(
-                child: Image.memory(
-                  document.bytes,
-                  errorBuilder: (_, _, _) => const Text(
-                    'This image could not be displayed.',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
+                child: document.remoteUrl != null
+                    ? Image.network(
+                        document.remoteUrl!,
+                        errorBuilder: (_, _, _) => const Text(
+                          'This image could not be displayed.',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      )
+                    : Image.memory(
+                        document.bytes,
+                        errorBuilder: (_, _, _) => const Text(
+                          'This image could not be displayed.',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
               ),
             )
           : Center(

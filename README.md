@@ -28,10 +28,11 @@ Implemented backend services:
 - RecyConnect launcher branding for Android, iOS, and web/PWA installs using
   `web/recycon_icon.jpg`.
 
-Important limitation: uploaded profile photos, identity documents, business
-permits, and recyclable-item photos are currently held in memory only. They are
-not uploaded to Firebase Storage and will be lost when the app session ends or
-the application is restarted.
+Registration identity documents and business permits are uploaded to Firebase
+Storage, while their names, sizes, and download URLs are saved in Firestore.
+Firebase Storage must first be initialized from the Firebase Console for this
+upload flow to work. Profile photos and recyclable-item photos are still local
+previews and are not yet uploaded.
 
 ## Main features
 
@@ -176,12 +177,9 @@ correct Firebase Auth UID.
 The registration page accepts two valid-ID files (front and back) together,
 plus a business permit for junk-shop accounts. JPG, JPEG, PNG, PDF, DOC, and
 DOCX files are limited to 5 MB each. Household posts and profile editing also allow image selection. The
-selected bytes are used by the current running app to display previews, but
-they are not persisted in Firestore or Firebase Storage.
-
-This is intentional for the free-plan version because binary files should not
-be placed directly inside Firestore documents. Permanent file storage should
-use Firebase Storage with download URLs stored in Firestore.
+Registration documents are uploaded to Firebase Storage after the user account
+is created. Firestore stores only document metadata and download URLs; binary
+files are not placed directly inside Firestore documents.
 
 ### Firebase Spark plan and device synchronization
 
@@ -192,13 +190,11 @@ project configuration, the user has internet access, and the deployed
 Firestore rules allow the operation. Firestore usage is still subject to the
 Spark plan's quotas.
 
-The current app does not upload registration documents. The valid-ID front,
-valid-ID back, and business-permit bytes are held only in the running app's
-memory, so they are not available to an administrator on another device and
-are lost when the app is closed. Firebase Storage is the correct permanent
-solution for those files, but current Firebase Storage access requires the
-Blaze billing plan even when usage stays within its no-cost quota. Do not put
-the binary documents directly in Firestore.
+The valid-ID front, valid-ID back, and business-permit files are now stored in
+Firebase Storage and remain available to an administrator on another device.
+Before testing registration uploads, open the Firebase Console, choose Storage,
+click **Get started**, and select the project storage location. Do not put the
+binary documents directly in Firestore.
 
 ### Production upload design
 

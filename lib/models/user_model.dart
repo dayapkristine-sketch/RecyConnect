@@ -69,9 +69,16 @@ extension AccountStatusLabel on AccountStatus {
 }
 
 class UploadedDoc {
-  const UploadedDoc({required this.name, required this.bytes});
+  const UploadedDoc({
+    required this.name,
+    required this.bytes,
+    this.remoteUrl,
+    this.sizeBytes,
+  });
   final String name;
   final Uint8List bytes;
+  final String? remoteUrl;
+  final int? sizeBytes;
 
   String get extension {
     final i = name.lastIndexOf('.');
@@ -83,7 +90,7 @@ class UploadedDoc {
   bool get isWord => extension == 'doc' || extension == 'docx';
 
   String get sizeLabel {
-    final kb = bytes.length / 1024;
+    final kb = (sizeBytes ?? bytes.length) / 1024;
     return kb < 1024
         ? '${kb.toStringAsFixed(0)} KB'
         : '${(kb / 1024).toStringAsFixed(1)} MB';
