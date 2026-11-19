@@ -183,6 +183,23 @@ This is intentional for the free-plan version because binary files should not
 be placed directly inside Firestore documents. Permanent file storage should
 use Firebase Storage with download URLs stored in Firestore.
 
+### Firebase Spark plan and device synchronization
+
+The application can use Firebase's no-cost Spark plan for a small number of
+users and modest usage. Firebase Authentication and Firestore data remain
+available across devices as long as every installed copy uses this same Firebase
+project configuration, the user has internet access, and the deployed
+Firestore rules allow the operation. Firestore usage is still subject to the
+Spark plan's quotas.
+
+The current app does not upload registration documents. The valid-ID front,
+valid-ID back, and business-permit bytes are held only in the running app's
+memory, so they are not available to an administrator on another device and
+are lost when the app is closed. Firebase Storage is the correct permanent
+solution for those files, but current Firebase Storage access requires the
+Blaze billing plan even when usage stays within its no-cost quota. Do not put
+the binary documents directly in Firestore.
+
 ### Production upload design
 
 When permanent online uploads are enabled, use paths like:
@@ -305,6 +322,22 @@ adb install -r build/app/outputs/flutter-apk/RecyConnect.apk
 The phone may ask you to allow installation from the browser or file manager.
 Only install APKs downloaded from a trusted project source. The APK connects
 to the configured Firebase project when the device has internet access.
+
+### Will the app work on different devices?
+
+Yes, the installed APK can be used on multiple Android devices and those
+devices can share the same Firebase Authentication accounts and Firestore
+records. This means that approved users, posts, offers, messages, notifications,
+favorites, reports, and profile fields can be synchronized between devices.
+
+Before distributing the APK, confirm that the Firebase project is configured,
+Email/Password Authentication is enabled, the Firestore database exists,
+`firestore.rules` is deployed, and each device can connect to the internet.
+Device-specific items are not shared: biometric enrollment, theme preference,
+cached map tiles, and the currently selected registration documents remain
+local to each device. The current APK is connected to Firebase, but it is not
+an automatically published public app; users still need the APK file or a
+store-distributed build installed on their devices.
 
 Before sharing a release with testers, verify:
 
