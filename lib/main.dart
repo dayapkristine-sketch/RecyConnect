@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
@@ -24,6 +26,7 @@ class StartupApp extends StatefulWidget {
 
 class _StartupAppState extends State<StartupApp> {
   AppProvider? _appProvider;
+  String? _startupError;
 
   @override
   void initState() {
@@ -32,23 +35,34 @@ class _StartupAppState extends State<StartupApp> {
   }
 
   Future<void> _initialize() async {
-    // Keep the branded startup screen visible briefly without delaying any
-    // Firebase work beyond what is necessary.
-    final minimumLoadingTime = Future<void>.delayed(const Duration(seconds: 2));
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    await initializeOfflineMapCache();
-    final appProvider = AppProvider();
-    await appProvider.loadTheme();
-    await minimumLoadingTime;
-    if (mounted) setState(() => _appProvider = appProvider);
+    try {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+      // Map caching is optional and must not delay the first screen, especially
+      // on web where a file-backed cache is not available.
+      unawaited(initializeOfflineMapCache());
+      final appProvider = AppProvider();
+      await appProvider.loadTheme();
+      if (mounted) setState(() => _appProvider = appProvider);
+    } catch (error) {
+      if (mounted) setState(() => _startupError = error.toString());
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final appProvider = _appProvider;
     if (appProvider == null) {
+      if (_startupError != null) {
+        return _StartupErrorPage(
+          message: _startupError!,
+          onRetry: () => setState(() {
+            _startupError = null;
+            _initialize();
+          }),
+        );
+      }
       return MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'RecyConnect',
@@ -61,6 +75,57 @@ class _StartupAppState extends State<StartupApp> {
         ChangeNotifierProvider(create: (_) => PostStore()),
       ],
       child: const RecyConnectApp(),
+    );
+  }
+}
+
+class _StartupErrorPage extends StatelessWidget {
+  const _StartupErrorPage({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'RecyConnect',
+      home: Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.cloud_off_rounded, size: 64),
+                const SizedBox(height: 16),
+                const Text(
+                  'Could not start RecyConnect',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Check your connection and try again.',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                FilledButton.icon(
+                  onPressed: onRetry,
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Try again'),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 11, color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

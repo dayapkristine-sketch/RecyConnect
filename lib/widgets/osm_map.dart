@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_cache/flutter_map_cache.dart';
@@ -9,8 +10,14 @@ dynamic _mapTileStore;
 /// Initializes a persistent tile cache so previously viewed map areas remain
 /// available after the app restarts or the device loses connectivity.
 Future<void> initializeOfflineMapCache() async {
-  final directory = await getTemporaryDirectory();
-  _mapTileStore = FileCacheStore('${directory.path}/recyconnect_map_tiles');
+  if (kIsWeb) return;
+  try {
+    final directory = await getTemporaryDirectory();
+    _mapTileStore = FileCacheStore('${directory.path}/recyconnect_map_tiles');
+  } catch (_) {
+    // The map can still use the network provider if a local cache is
+    // unavailable. Startup should not be blocked by an optional feature.
+  }
 }
 
 /// OpenStreetMap tile layer. A real userAgentPackageName is required by the
