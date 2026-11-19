@@ -26,8 +26,8 @@ class AppBackground extends StatelessWidget {
         ),
         Container(
           color: dark
-              ? Colors.black.withValues(alpha: 0.72)
-              : const Color(0xFF102B1A).withValues(alpha: 0.48),
+              ? Colors.black.withValues(alpha: 0.42)
+              : const Color(0xFF102B1A).withValues(alpha: 0.26),
         ),
         child,
       ],

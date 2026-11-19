@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../models/user_model.dart';
 import '../../providers/app_provider.dart';
 import '../../providers/post_store.dart';
+import '../../services/firebase_service.dart';
 import '../../widgets/app_background.dart';
 import 'register_page.dart';
 import 'verify_email_page.dart';
@@ -50,10 +51,19 @@ class _LoginPageState extends State<LoginPage> {
     final user = app.currentUser!;
     await context.read<PostStore>().loadForCurrentUser();
     if (!mounted) return;
-    await Navigator.of(context).push<bool>(
+    final biometricVerified = await Navigator.of(context).push<bool>(
       MaterialPageRoute(builder: (_) => const BiometricVerificationPage()),
     );
     if (!mounted) return;
+    if (biometricVerified != true) {
+      await FirebaseService.signOut();
+      if (!mounted) return;
+      app.logout();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Identity verification was cancelled.')),
+      );
+      return;
+    }
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (_) {
@@ -148,9 +158,9 @@ class _LoginPageState extends State<LoginPage> {
                         Container(
                           padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.62),
+                            color: Colors.black.withValues(alpha: 0.32),
                             borderRadius: BorderRadius.circular(24),
-                            border: Border.all(color: Colors.white24),
+                            border: Border.all(color: Colors.white38),
                           ),
                           child: Form(
                             key: _formKey,
@@ -159,6 +169,7 @@ class _LoginPageState extends State<LoginPage> {
                               children: [
                                 const Text(
                                   'Welcome back!',
+                                  textAlign: TextAlign.center,
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 25,
@@ -168,6 +179,7 @@ class _LoginPageState extends State<LoginPage> {
                                 const SizedBox(height: 6),
                                 const Text(
                                   'Log in to continue to your account.',
+                                  textAlign: TextAlign.center,
                                   style: TextStyle(color: Colors.white70),
                                 ),
                                 const SizedBox(height: 24),
@@ -227,14 +239,13 @@ class _LoginPageState extends State<LoginPage> {
                                   ),
                                 ),
                                 const SizedBox(height: 16),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
+                                Wrap(
+                                  alignment: WrapAlignment.center,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
                                   children: [
-                                    const Flexible(
-                                      child: Text(
-                                        "Don't have an account?",
-                                        style: TextStyle(color: Colors.white70),
-                                      ),
+                                    const Text(
+                                      "Don't have an account?",
+                                      style: TextStyle(color: Colors.white70),
                                     ),
                                     TextButton(
                                       onPressed: () => Navigator.push(
@@ -298,7 +309,7 @@ class _LoginPageState extends State<LoginPage> {
         prefixIcon: Icon(icon, color: const Color(0xFF4ADE80)),
         suffixIcon: suffix,
         filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.10),
+        fillColor: Colors.white.withValues(alpha: 0.20),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(13)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(13),

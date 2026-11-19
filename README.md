@@ -173,8 +173,9 @@ correct Firebase Auth UID.
 
 ### Current behavior
 
-The registration page accepts JPG, JPEG, PNG, PDF, DOC, and DOCX files up to
-5 MB. Household posts and profile editing also allow image selection. The
+The registration page accepts two valid-ID files (front and back) together,
+plus a business permit for junk-shop accounts. JPG, JPEG, PNG, PDF, DOC, and
+DOCX files are limited to 5 MB each. Household posts and profile editing also allow image selection. The
 selected bytes are used by the current running app to display previews, but
 they are not persisted in Firestore or Firebase Storage.
 

@@ -21,7 +21,7 @@ class HeaderBackground extends StatelessWidget {
           children: [
             Positioned.fill(
               child: Image.asset(
-                'assets/images/recyconnect_bg.jpg',
+                'assets/images/green_envi.jpg',
                 fit: BoxFit.cover,
                 errorBuilder: (_, _, _) => Container(
                   decoration: const BoxDecoration(
@@ -41,8 +41,8 @@ class HeaderBackground extends StatelessWidget {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      const Color(0xFF14573A).withValues(alpha: 0.88),
-                      const Color(0xFF238B45).withValues(alpha: 0.68),
+                      const Color(0xFF14573A).withValues(alpha: 0.68),
+                      const Color(0xFF238B45).withValues(alpha: 0.48),
                     ],
                   ),
                 ),

@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import '../../models/user_model.dart';
 import '../../providers/app_provider.dart';
 import '../../widgets/app_background.dart';
-import '../../widgets/theme_toggle.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -72,6 +71,73 @@ class _RegisterPageState extends State<RegisterPage> {
       return null;
     }
     return UploadedDoc(name: f.name, bytes: f.bytes!);
+  }
+
+  Future<void> _pickIdDocuments() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'],
+      allowMultiple: true,
+      withData: true,
+    );
+    if (result == null || result.files.isEmpty) return;
+    if (result.files.length != 2) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Select exactly 2 files: the front and back of your valid ID.',
+            ),
+          ),
+        );
+      }
+      return;
+    }
+    final docs = <UploadedDoc>[];
+    for (final file in result.files) {
+      if (file.bytes == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Could not read one of the selected files.'),
+            ),
+          );
+        }
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${file.name} is larger than 5 MB.')),
+          );
+        }
+        return;
+      }
+      docs.add(UploadedDoc(name: file.name, bytes: file.bytes!));
+    }
+    if (!mounted) return;
+    setState(() {
+      _idDoc = docs[0];
+      _idBackDoc = docs[1];
+    });
+  }
+
+  Widget _idDocumentsButton() {
+    final count = [_idDoc, _idBackDoc].whereType<UploadedDoc>().length;
+    return OutlinedButton.icon(
+      onPressed: _pickIdDocuments,
+      icon: Icon(count == 2 ? Icons.check_circle : Icons.upload_file),
+      label: Text(
+        count == 2
+            ? '2 valid ID files attached'
+            : 'Attach valid ID (front + back)',
+      ),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: const Color(0xFF4ADE80),
+        side: const BorderSide(color: Color(0xFF4ADE80)),
+        padding: const EdgeInsets.symmetric(vertical: 14),
+      ),
+    );
   }
 
   Widget _docButton(String label, UploadedDoc? doc, VoidCallback onTap) {
@@ -162,14 +228,10 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: AppBackground(
+        assetPath: 'assets/images/green_envi.jpg',
         child: SafeArea(
           child: Stack(
             children: [
-              const Positioned(
-                right: 12,
-                top: 8,
-                child: ThemeToggle(iconOnly: true),
-              ),
               Center(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(20),
@@ -178,7 +240,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     child: Container(
                       padding: const EdgeInsets.all(22),
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.70),
+                        color: Colors.black.withValues(alpha: 0.32),
                         borderRadius: BorderRadius.circular(22),
                         border: Border.all(color: Colors.white24),
                       ),
@@ -351,19 +413,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                   : null,
                             ),
                             const SizedBox(height: 18),
-                            _docButton('Attach valid ID', _idDoc, () async {
-                              final d = await _pickDoc();
-                              if (d != null) setState(() => _idDoc = d);
-                            }),
-                            const SizedBox(height: 10),
-                            _docButton(
-                              'Attach ID back side',
-                              _idBackDoc,
-                              () async {
-                                final d = await _pickDoc();
-                                if (d != null) setState(() => _idBackDoc = d);
-                              },
-                            ),
+                            _idDocumentsButton(),
                             if (_role == UserRole.junkShop) ...[
                               const SizedBox(height: 10),
                               _docButton(
@@ -379,7 +429,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             ],
                             const SizedBox(height: 4),
                             const Text(
-                              'JPG, PNG, PDF or Word (DOC/DOCX), up to 5 MB. A clear photo of the document is preferred. Online document storage will be enabled later.',
+                              'Select the front and back together. JPG, PNG, PDF or Word (DOC/DOCX), up to 5 MB each. Files stay in memory only and are not uploaded to Firebase Storage.',
                               style: TextStyle(
                                 color: Colors.white60,
                                 fontSize: 11,
@@ -439,7 +489,7 @@ class _RegisterPageState extends State<RegisterPage> {
     labelStyle: const TextStyle(color: Colors.white70),
     prefixIcon: Icon(icon, color: const Color(0xFF4ADE80)),
     filled: true,
-    fillColor: Colors.white.withValues(alpha: 0.10),
+    fillColor: Colors.white.withValues(alpha: 0.20),
     border: OutlineInputBorder(borderRadius: BorderRadius.circular(13)),
   );
 
