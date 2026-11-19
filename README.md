@@ -239,6 +239,11 @@ continued Storage access, even though a no-cost usage quota may still apply.
 - Passwords are handled by Firebase Authentication and are never stored in
   Firestore.
 - Registration requires email verification.
+- Users sign in with the email address used during registration. The username
+  is a profile identifier and is not queried before authentication.
+- Registration sends the verification email immediately; login requires both
+  administrator approval and a verified email address. If verification is still
+  pending, the login form shows a bottom notice with resend and check actions.
 - Password reset uses Firebase's reset-email flow.
 - A user's role and approval status are controlled by administrator rules.
 - Users cannot self-register as administrators.
@@ -369,6 +374,10 @@ After a successful Firebase login, approved household, collector, junk-shop,
 and administrator users are shown a device biometric prompt. The app uses the
 `local_auth` package and requests verification through the operating system;
 the app never receives or stores the user's fingerprint or face data.
+
+The login sequence is: Firebase email/password authentication, administrator
+approval check, email verification check, then device biometric verification.
+Biometrics never replace Firebase authentication or email verification.
 
 On Android, the device must have a secure screen lock and at least one enrolled
 fingerprint or other supported biometric. If biometrics are unavailable,

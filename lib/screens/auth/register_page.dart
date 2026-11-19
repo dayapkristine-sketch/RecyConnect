@@ -209,7 +209,7 @@ class _RegisterPageState extends State<RegisterPage> {
         icon: const Icon(Icons.hourglass_top, color: Colors.orange, size: 42),
         title: const Text('Registration submitted'),
         content: const Text(
-          'Your account is now pending administrator approval. You can log in after it has been approved.',
+          'A verification email was sent to your Gmail. Your account is now pending administrator approval. After approval, verify your email before logging in.',
         ),
         actions: [
           FilledButton(

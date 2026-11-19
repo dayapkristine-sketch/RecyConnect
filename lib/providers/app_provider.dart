@@ -256,10 +256,6 @@ class AppProvider extends ChangeNotifier {
         identity: identity,
         password: password,
       );
-      if (!FirebaseService.auth.currentUser!.emailVerified) {
-        emailVerificationRequired = true;
-        return 'Please verify your email address before continuing.';
-      }
       if (user.status == AccountStatus.pending) {
         await FirebaseService.signOut();
         return 'Your account is still waiting for administrator approval.';
@@ -272,6 +268,10 @@ class AppProvider extends ChangeNotifier {
         await FirebaseService.signOut();
         return 'Your registration was rejected. Please contact the administrator.';
       }
+      if (!FirebaseService.auth.currentUser!.emailVerified) {
+        emailVerificationRequired = true;
+        return 'Please verify your email address before continuing.';
+      }
       currentUser = user;
       notifyListeners();
       return null;
@@ -280,7 +280,9 @@ class AppProvider extends ChangeNotifier {
         'invalid-credential' ||
         'wrong-password' ||
         'user-not-found' => 'Incorrect email/username or password.',
-        'invalid-email' => 'Please enter a valid email address.',
+        'invalid-email' =>
+          error.message ??
+              'Please log in using your registration email address.',
         'network-request-failed' => 'Please check your internet connection.',
         'user-disabled' => 'This account has been disabled.',
         'too-many-requests' => 'Too many attempts. Try again later.',

@@ -7,7 +7,6 @@ import '../../providers/post_store.dart';
 import '../../services/firebase_service.dart';
 import '../../widgets/app_background.dart';
 import 'register_page.dart';
-import 'verify_email_page.dart';
 import 'biometric_verification_page.dart';
 import '../admin/admin_dashboard.dart';
 import '../dashboards/role_dashboard.dart';
@@ -24,6 +23,8 @@ class _LoginPageState extends State<LoginPage> {
   final _username = TextEditingController();
   final _password = TextEditingController();
   bool _hidePassword = true;
+  bool _showVerificationNotice = false;
+  bool _checkingVerification = false;
 
   @override
   void dispose() {
@@ -38,11 +39,10 @@ class _LoginPageState extends State<LoginPage> {
     final message = await app.loginWithFirebase(_username.text, _password.text);
     if (!mounted) return;
     if (app.emailVerificationRequired) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const VerifyEmailPage()),
-      );
+      setState(() => _showVerificationNotice = true);
       return;
     }
+    setState(() => _showVerificationNotice = false);
     if (message != null) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(message)));
@@ -79,6 +79,40 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  Future<void> _resendVerification() async {
+    final app = context.read<AppProvider>();
+    final message = await app.resendVerificationEmail();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message ?? 'Verification email sent. Please check your Gmail inbox.',
+        ),
+      ),
+    );
+  }
+
+  Future<void> _checkVerification() async {
+    setState(() => _checkingVerification = true);
+    final app = context.read<AppProvider>();
+    final verified = await app.checkEmailVerification();
+    if (!mounted) return;
+    setState(() => _checkingVerification = false);
+    if (verified) {
+      await FirebaseService.signOut();
+      if (!mounted) return;
+      app.logout();
+      setState(() {
+        _showVerificationNotice = false;
+        _username.clear();
+        _password.clear();
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Email verified. Please log in again.')),
+      );
+    }
+  }
+
   void _forgotPassword() {
     final controller = TextEditingController(text: _username.text);
     final app = context.read<AppProvider>();
@@ -90,7 +124,7 @@ class _LoginPageState extends State<LoginPage> {
           controller: controller,
           keyboardType: TextInputType.emailAddress,
           decoration: const InputDecoration(
-            labelText: 'Email or username',
+            labelText: 'Email address',
             prefixIcon: Icon(Icons.email_outlined),
           ),
         ),
@@ -185,12 +219,13 @@ class _LoginPageState extends State<LoginPage> {
                                 const SizedBox(height: 24),
                                 _field(
                                   controller: _username,
-                                  label: 'Username or email',
-                                  icon: Icons.person_outline,
+                                  label: 'Email address',
+                                  icon: Icons.email_outlined,
                                   validator: (v) =>
-                                      v == null || v.trim().isEmpty
-                                      ? 'Enter your username'
+                                      v == null || !v.contains('@')
+                                      ? 'Enter the email address used to register'
                                       : null,
+                                  keyboard: TextInputType.emailAddress,
                                 ),
                                 const SizedBox(height: 16),
                                 _field(
@@ -238,6 +273,50 @@ class _LoginPageState extends State<LoginPage> {
                                     ),
                                   ),
                                 ),
+                                if (_showVerificationNotice) ...[
+                                  const SizedBox(height: 14),
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.orange.withValues(
+                                        alpha: 0.18,
+                                      ),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: Colors.orangeAccent,
+                                      ),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        const Text(
+                                          'Email not yet verified. Check your Gmail inbox, then try again.',
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Wrap(
+                                          alignment: WrapAlignment.center,
+                                          children: [
+                                            TextButton(
+                                              onPressed: _resendVerification,
+                                              child: const Text('Resend email'),
+                                            ),
+                                            TextButton(
+                                              onPressed: _checkingVerification
+                                                  ? null
+                                                  : _checkVerification,
+                                              child: Text(
+                                                _checkingVerification
+                                                    ? 'Checking...'
+                                                    : 'I verified it',
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                                 const SizedBox(height: 16),
                                 Wrap(
                                   alignment: WrapAlignment.center,
@@ -297,10 +376,12 @@ class _LoginPageState extends State<LoginPage> {
     required String? Function(String?) validator,
     bool obscure = false,
     Widget? suffix,
+    TextInputType? keyboard,
   }) {
     return TextFormField(
       controller: controller,
       obscureText: obscure,
+      keyboardType: keyboard,
       validator: validator,
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(

@@ -56,15 +56,10 @@ class FirebaseService {
   }) async {
     var email = identity.trim().toLowerCase();
     if (!email.contains('@')) {
-      final match = await db
-          .collection('users')
-          .where('username', isEqualTo: email)
-          .limit(1)
-          .get();
-      if (match.docs.isEmpty) {
-        throw FirebaseAuthException(code: 'user-not-found');
-      }
-      email = (match.docs.first.data()['email'] as String?) ?? email;
+      throw FirebaseAuthException(
+        code: 'invalid-email',
+        message: 'Please log in using the email address used to register.',
+      );
     }
 
     final result = await auth.signInWithEmailAndPassword(
