@@ -6,6 +6,7 @@ import '../../models/user_model.dart';
 import '../../providers/app_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/rating_widgets.dart';
+import '../../widgets/header_background.dart';
 import '../shared/provider_profile_page.dart';
 import 'admin_user_detail_page.dart';
 import 'admin_widgets.dart';
@@ -19,7 +20,7 @@ class AdminReportsPage extends StatelessWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        appBar: AppBar(
+        appBar: HeaderAppBar(
           title: const Text('Reports & ratings'),
           bottom: TabBar(
             tabs: [

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../providers/app_provider.dart';
 import 'admin_widgets.dart';
+import '../../widgets/header_background.dart';
 
 class AdminSettingsPage extends StatelessWidget {
   const AdminSettingsPage({super.key});
@@ -12,7 +13,7 @@ class AdminSettingsPage extends StatelessWidget {
     final app = context.watch<AppProvider>();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('System settings')),
+      appBar: const HeaderAppBar(title: Text('System settings')),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [

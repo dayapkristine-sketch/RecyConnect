@@ -1,0 +1,52 @@
+services:
+  households-db:
+    image: postgres:16
+    command: postgres -c max_prepared_transactions=10
+    environment:
+      POSTGRES_DB: recyconnect
+      POSTGRES_USER: pit
+      POSTGRES_PASSWORD: pit_password
+    ports:
+      - "5541:5432"
+    volumes:
+      - ./nodes/households/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pit -d recyconnect"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+
+  providers-db:
+    image: postgres:16
+    command: postgres -c max_prepared_transactions=10
+    environment:
+      POSTGRES_DB: recyconnect
+      POSTGRES_USER: pit
+      POSTGRES_PASSWORD: pit_password
+    ports:
+      - "5542:5432"
+    volumes:
+      - ./nodes/providers/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pit -d recyconnect"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+
+  coordinator:
+    image: python:3.12-slim
+    working_dir: /demo
+    environment:
+      PIP_DEFAULT_TIMEOUT: "120"
+      PIP_RETRIES: "10"
+    depends_on:
+      households-db:
+        condition: service_healthy
+      providers-db:
+        condition: service_healthy
+    volumes:
+      - ./client:/demo:ro
+    command: >-
+      sh -c "pip install --no-cache-dir --progress-bar off --timeout 120 --retries 10 psycopg2-binary &&
+      python main.py"
+

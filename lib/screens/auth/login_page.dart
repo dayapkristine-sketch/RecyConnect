@@ -71,6 +71,7 @@ class _LoginPageState extends State<LoginPage> {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(loadError)));
       }
+      app.startAdminUserSync();
     }
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(

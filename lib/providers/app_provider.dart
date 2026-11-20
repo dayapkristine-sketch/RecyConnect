@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'dart:typed_data';
@@ -20,6 +23,7 @@ class AppProvider extends ChangeNotifier {
   final List<ActivityLog> logs = [];
   final List<Rating> ratings = [];
   final List<UserReport> reports = [];
+  StreamSubscription<List<AppUser>>? _adminUsersSubscription;
 
   // Configurable by the admin (WBS 1.9.8 / 1.9.9)
   final List<String> materialCategories = [
@@ -261,6 +265,18 @@ class AppProvider extends ChangeNotifier {
     } catch (error) {
       return 'Could not load users from Firebase: $error';
     }
+  }
+
+  void startAdminUserSync() {
+    _adminUsersSubscription?.cancel();
+    _adminUsersSubscription = FirebaseService.watchUsersForAdmin().listen((
+      loaded,
+    ) {
+      users
+        ..clear()
+        ..addAll(loaded);
+      notifyListeners();
+    });
   }
 
   Future<String?> loginWithFirebase(String identity, String password) async {
@@ -614,10 +630,18 @@ class AppProvider extends ChangeNotifier {
   }
 
   void logout() {
+    _adminUsersSubscription?.cancel();
+    _adminUsersSubscription = null;
     final u = currentUser;
     if (u != null) _log(LogType.login, '${u.fullName} logged out');
     currentUser = null;
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _adminUsersSubscription?.cancel();
+    super.dispose();
   }
 
   int get pendingCount =>

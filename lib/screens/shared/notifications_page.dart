@@ -5,6 +5,7 @@ import '../../models/recyclable_post.dart';
 import '../../providers/app_provider.dart';
 import '../../providers/post_store.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/header_background.dart';
 import 'communication_page.dart';
 import 'post_chat_page.dart';
 
@@ -18,7 +19,7 @@ class NotificationsPage extends StatelessWidget {
     final list = store.notificationsFor(username);
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: HeaderAppBar(
         title: const Text('Notifications'),
         actions: [
           TextButton(

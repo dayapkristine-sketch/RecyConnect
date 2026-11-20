@@ -6,6 +6,7 @@ import '../../models/feedback_model.dart';
 import '../../providers/app_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/rating_widgets.dart';
+import '../../widgets/header_background.dart';
 import '../admin/admin_widgets.dart' show formatDateTime, timeAgo;
 import 'provider_profile_page.dart';
 
@@ -28,7 +29,7 @@ class MyFeedbackPage extends StatelessWidget {
       length: 2,
       initialIndex: initialTab,
       child: Scaffold(
-        appBar: AppBar(
+        appBar: HeaderAppBar(
           title: const Text('Reviews & Reports'),
           bottom: const TabBar(
             tabs: [

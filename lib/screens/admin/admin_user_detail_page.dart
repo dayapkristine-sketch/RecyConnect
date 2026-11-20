@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../models/user_model.dart';
 import '../../providers/app_provider.dart';
+import '../../widgets/header_background.dart';
 import 'admin_widgets.dart';
 
 class AdminUserDetailPage extends StatelessWidget {
@@ -15,7 +16,7 @@ class AdminUserDetailPage extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Account details')),
+      appBar: const HeaderAppBar(title: Text('Account details')),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [

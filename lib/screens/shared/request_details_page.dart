@@ -10,6 +10,7 @@ import '../../theme/app_theme.dart';
 import '../../utils/launch_helper.dart';
 import '../../utils/location_helper.dart';
 import '../../widgets/cancel_reason_dialog.dart';
+import '../../widgets/header_background.dart';
 import '../../widgets/osm_map.dart';
 import '../../widgets/post_widgets.dart';
 import 'route_map_page.dart';
@@ -144,7 +145,7 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
     final myOffer = post.offerBy(me?.username ?? '');
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Request Details')),
+      appBar: const HeaderAppBar(title: Text('Request Details')),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [

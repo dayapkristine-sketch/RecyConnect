@@ -7,6 +7,7 @@ import '../../theme/app_theme.dart';
 import '../../utils/launch_helper.dart';
 import '../../utils/location_helper.dart';
 import '../../widgets/osm_map.dart';
+import '../../widgets/header_background.dart';
 
 /// Shows collector -> household pin, distance, and opens turn-by-turn
 /// directions in the browser/maps app (OpenStreetMap routing, no API key).
@@ -41,7 +42,7 @@ class _RouteMapPageState extends State<RouteMapPage> {
     final samePlace = km < 0.05;
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title)),
+      appBar: HeaderAppBar(title: Text(widget.title)),
       body: Stack(
         children: [
           FlutterMap(

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../providers/app_provider.dart';
 import '../../providers/post_store.dart';
+import '../../widgets/header_background.dart';
 
 class DirectChatPage extends StatefulWidget {
   const DirectChatPage({
@@ -53,7 +54,7 @@ class _DirectChatPageState extends State<DirectChatPage> {
       widget.otherUsername,
     );
     return Scaffold(
-      appBar: AppBar(title: Text(widget.otherName)),
+      appBar: HeaderAppBar(title: Text(widget.otherName)),
       body: Column(
         children: [
           Expanded(

@@ -443,9 +443,18 @@ The current application demonstrates a functional Flutter/Firebase client with
 authentication, role-based workflows, Firestore CRUD, notifications, reports,
 responsive screens, and security rules.
 
-If the PIT specifically requires a distributed-database prototype, the project
-still needs a separate demonstrator for horizontal/vertical fragmentation,
-replication across nodes or containers, distributed joins, and a two-phase
-commit success/rollback scenario. Firebase alone does not demonstrate those
-database-node requirements. Document that architecture separately rather than
-claiming that the current mobile client satisfies it.
+If the PIT specifically requires a distributed-database prototype, Firebase
+alone does not demonstrate the required database-node behavior. The mobile
+client and the PIT demonstrator should therefore be presented as two connected
+parts of the project, without claiming that Firebase itself is the PostgreSQL
+node demonstration.
+
+The separate PIT demonstrator is in [`pit_demo/`](pit_demo/README.md). It
+contains a Docker Compose setup with household and provider PostgreSQL nodes,
+replicated material reference data, a coordinator-side distributed join, and
+successful/failure 2PC demonstrations. Run it from that folder with:
+
+```powershell
+docker compose up --abort-on-container-exit --build
+docker compose down -v
+```

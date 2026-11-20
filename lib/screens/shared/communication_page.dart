@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../providers/app_provider.dart';
 import '../../providers/post_store.dart';
+import '../../widgets/header_background.dart';
 import 'direct_chat_page.dart';
 import 'post_chat_page.dart';
 
@@ -21,7 +22,7 @@ class CommunicationPage extends StatelessWidget {
     final contacts = store.directContactsFor(username).toList();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Communication')),
+      appBar: const HeaderAppBar(title: Text('Communication')),
       body: posts.isEmpty && contacts.isEmpty
           ? const Center(
               child: Text('Your messages and conversations will appear here.'),

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../models/recyclable_post.dart';
 import '../../providers/app_provider.dart';
 import '../../providers/post_store.dart';
+import '../../widgets/header_background.dart';
 
 class PostChatPage extends StatefulWidget {
   const PostChatPage({super.key, required this.post, this.recipientUsername});
@@ -61,7 +62,7 @@ class _PostChatPageState extends State<PostChatPage> {
     );
 
     return Scaffold(
-      appBar: AppBar(title: Text('Chat • ${widget.post.material}')),
+      appBar: HeaderAppBar(title: Text('Chat • ${widget.post.material}')),
       body: Column(
         children: [
           Expanded(

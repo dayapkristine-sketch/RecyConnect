@@ -7,6 +7,7 @@ import '../../providers/app_provider.dart';
 import '../../providers/post_store.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/launch_helper.dart';
+import '../../widgets/header_background.dart';
 import 'direct_chat_page.dart';
 
 /// Regular ("suki") contacts. Works for households, collectors and junk shops.
@@ -49,7 +50,7 @@ class SukiPage extends StatelessWidget {
     final list = store.sukiFor(owner);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Regular Contacts (Suki)')),
+      appBar: const HeaderAppBar(title: Text('Regular Contacts (Suki)')),
       floatingActionButton: FloatingActionButton.extended(
         heroTag: null,
         onPressed: () => _openAdd(context, owner),

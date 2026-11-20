@@ -56,6 +56,48 @@ class HeaderBackground extends StatelessWidget {
   }
 }
 
+/// App bar variant that uses the same branded image treatment as dashboard
+/// headers, including the status-bar area.
+class HeaderAppBar extends StatelessWidget implements PreferredSizeWidget {
+  const HeaderAppBar({
+    super.key,
+    required this.title,
+    this.leading,
+    this.actions,
+    this.bottom,
+    this.automaticallyImplyLeading = true,
+  });
+
+  final Widget? title;
+  final Widget? leading;
+  final List<Widget>? actions;
+  final PreferredSizeWidget? bottom;
+  final bool automaticallyImplyLeading;
+
+  @override
+  Size get preferredSize =>
+      Size.fromHeight(kToolbarHeight + (bottom?.preferredSize.height ?? 0));
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      title: title,
+      leading: leading,
+      actions: actions,
+      bottom: bottom,
+      automaticallyImplyLeading: automaticallyImplyLeading,
+      foregroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      flexibleSpace: HeaderBackground(
+        radius: 0,
+        child: const SizedBox.expand(),
+      ),
+    );
+  }
+}
+
 /// A simple page header (title + optional subtitle) with the background.
 class ScreenHeader extends StatelessWidget {
   const ScreenHeader({

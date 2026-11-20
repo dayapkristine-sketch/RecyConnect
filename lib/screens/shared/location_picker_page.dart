@@ -5,6 +5,7 @@ import 'package:latlong2/latlong.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/location_helper.dart';
 import '../../widgets/osm_map.dart';
+import '../../widgets/header_background.dart';
 
 /// Opens a full-screen OpenStreetMap. Tap to drop the pin, then "Confirm Pin".
 /// Returns the chosen [LatLng] via Navigator.pop. Use readOnly to just view.
@@ -72,7 +73,7 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      appBar: HeaderAppBar(
         title: Text(
           widget.readOnly ? 'Pinned Location' : 'Pin Pickup Location',
         ),
